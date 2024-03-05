@@ -7,18 +7,21 @@
 
 using namespace sf;
 
-const int M = 20;
-const int N = 10;
+//ตั้งค่าแถวหลัก
+const int M = 20; //จำนวนแถว
+const int N = 10; //จำนวนหลัก
 
+//ตั้ง grid
 int field[M][N] = { 0 };
 
+//ตำแหน่ง block
 struct Point {
     int x, y;
 };
 
 Point a[4], b[4];
 
-//
+//Block
 int block[7][4] =
 {
     1,3,5,7, // I
@@ -30,6 +33,7 @@ int block[7][4] =
     2,3,4,5, // O
 };
 
+//เช็คชนขอบ
 bool checkCollision() {
     for (int i = 0; i < 4; i++) {
         if (a[i].x < 0 || a[i].x >= N || a[i].y >= M) {
@@ -44,7 +48,8 @@ bool checkCollision() {
 
 
 int main()
-{
+{   
+
     srand(time(0));
 
     RenderWindow window(VideoMode(400, 480), "TetrisTetruy");
@@ -59,7 +64,7 @@ int main()
     Sound over_sound;
     over_sound.setBuffer(over); 
 
-
+    //ถ้าเปิดไม่ได้ cout error
     if (!music.openFromFile("audio/bgmm.wav")) {
         std::cout << "ERROR";
     }
@@ -76,6 +81,7 @@ int main()
     music.play();
     music.setVolume(70);
     
+    //โหลดไฟล์
     Texture texture1, texture2, texture3, texture4, texture5, texture6;
     texture1.loadFromFile("images/tiles.png");
     texture2.loadFromFile("images/background.png");
@@ -84,90 +90,97 @@ int main()
     texture5.loadFromFile("images/gameover.png");
     texture6.loadFromFile("images/finalscore.png");
 
+    //นำ texture เก็บไว้ในตัวแปร
     Sprite s(texture1), background(texture2), frame(texture3), nums(texture4), gameover(texture5), scorefinal(texture6);
 
+    //คะแนน
     int score = 0;
     int scoreDigits;
     int number[10] = { 0,1,2,3,4,5,6,7,8,9 };
 
+    //คอมโบเมื่อได้หลายบล็อก
     int comboCount = 0;
-    int comboMultiplier = 1;
-    float timeSinceLastClear = 0.0f;
-    const float comboWindow = 2.0f;
+    int comboMultiplier = 1; //ตัวคูณ
+    float timeSinceLastClear = 0.0f; //ระยะเวลาจากครั้งล่าสุดที่ได้คะแนน
+    const float comboWindow = 2.0f; //ระยะเวลาในการทำคอมโบ
 
     int xPos = 4; 
     bool rotate = 0;
-    int colorNum = 1 + rand() % 7;
-    float timer = 0, delay = 0.01;
+    int colorNum = 1 + rand() % 7; //สี
+    float timer = 0, delay = 0.01; //ความเร็ว
     bool gameOver = false;
 
     Clock clock;
 
-    int n = rand() % 7;
+    int n = 0;
     for (int i = 0;i < 4;i++) {
         a[i].x = block[n][i] % 2;
         a[i].y = block[n][i] / 2;
     }
-    //game start
 
+    //game start
     while (window.isOpen())
     {
-                
-            float time = clock.getElapsedTime().asSeconds();
-            clock.restart();
-            timer += time;
-            Event e;
-            while (window.pollEvent(e))
-            {
-                if (e.type == Event::Closed) {
-                    window.close();
-                }
-                if (e.type == Event::KeyPressed) {
-                    if (e.key.code == Keyboard::R) {
-                        std::cout << "restart";
-                        score = 0;
-                        comboCount = 0;
-                        comboMultiplier = 1;
-                        timeSinceLastClear = 0.0f;
-                        gameOver = false;
 
-                        // Clear the game grid
-                        for (int i = 0; i < M; i++) {
-                            for (int j = 0; j < N; j++) {
-                                field[i][j] = 0;
-                            }
-                        }
+        //เอาเวลาเป็นวินาทีเก็บไว้ในตัวแปร
+        float time = clock.getElapsedTime().asSeconds();
+        clock.restart();
+        timer += time;
 
-                        // Set up a new Tetrimino piece
-                        colorNum = 1 + rand() % 7;
-                        n = rand() % 7;
-                        for (int i = 0; i < 4; i++) {
-                            a[i].x = block[n][i] % 2;
-                            a[i].y = block[n][i] / 2;
-                        }
-                        for (int i = 0; i < 4; i++) {
-                            a[i].x += 4;
+        //ปุ่มกด
+        Event e;
+        while (window.pollEvent(e))
+        {
+            if (e.type == Event::Closed) {
+                window.close();
+            }
+            //restart
+            if (e.type == Event::KeyPressed) {
+                if (e.key.code == Keyboard::R) {
+                    std::cout << "restart";
+                    score = 0;
+                    comboCount = 0;
+                    comboMultiplier = 1;
+                    timeSinceLastClear = 0.0f;
+                    gameOver = false;
+
+                    // เคลียร์ grid
+                    for (int i = 0; i < M; i++) {
+                        for (int j = 0; j < N; j++) {
+                            field[i][j] = 0;
                         }
                     }
-                }
-                if (gameOver == false) {
-                    if (e.type == Event::KeyPressed)
-                        if (e.key.code == Keyboard::Up) {
-                            rotate = true;
-                        }
-                        else if (e.key.code == Keyboard::Left) {
-                            xPos = -1;
-                        }
-                        else if (e.key.code == Keyboard::Right) {
-                            xPos = 1;
-                        }
+
+                    // ตั้งตัว block
+                    colorNum = 1 + rand() % 7;
+                    n = rand() % 7;
+                    for (int i = 0; i < 4; i++) {
+                        a[i].x = block[n][i] % 2;
+                        a[i].y = block[n][i] / 2;
+                    }
+                    for (int i = 0; i < 4; i++) {
+                        a[i].x += 4;
+                    }
                 }
             }
-
-
-            if (Keyboard::isKeyPressed(Keyboard::Down)) {
-                delay = 0.05;
+            if (gameOver == false) {
+                if (e.type == Event::KeyPressed)
+                    if (e.key.code == Keyboard::Up) {
+                        rotate = true;
+                    }
+                    else if (e.key.code == Keyboard::Left) {
+                        xPos = -1;
+                    }
+                    else if (e.key.code == Keyboard::Right) {
+                        xPos = 1;
+                    }
             }
+        }
+
+
+        if (Keyboard::isKeyPressed(Keyboard::Down)) {
+            delay = 0.05;
+        }
 
         if (gameOver == false) {
             //ขยับ
@@ -182,13 +195,15 @@ int main()
             }
             //หมุน
             if (rotate) {
-                Point center = a[1]; //center of rotation
+                Point center = a[1]; //แกนหมุน
                 for (int i = 0; i < 4; i++) {
                     int x = a[i].y - center.y;
                     int y = a[i].x - center.x;
                     a[i].x = center.x - x;
                     a[i].y = center.y + y;
                 }
+
+                //ถ้าชนกลับตำแน่งเดิม
                 if (checkCollision() == true) {
                     for (int i = 0;i < 4;i++) {
                         a[i] = b[i];
@@ -203,14 +218,15 @@ int main()
                     a[i].y += 1;
                 }
 
+                //ถ้าชนตั้งค่าช่องที่มีบล็อกเท่ากับเลขสี
                 if (checkCollision() == true) {
                     for (int i = 0; i < 4; i++) {
                         field[b[i].y][b[i].x] = colorNum;
                     }
 
-
+                    //สร้างบล็อกใหม่
                     colorNum = 1 + rand() % 7;
-                    n = rand() % 7;
+                    n = 0;
                     for (int i = 0;i < 4;i++) {
                         a[i].x = block[n][i] % 2;
                         a[i].y = block[n][i] / 2;
@@ -230,6 +246,7 @@ int main()
 
                 }
 
+                // reset timer
                 timer = 0;
             }
 
@@ -256,9 +273,6 @@ int main()
                         comboMultiplier++;
                     }
 
-                    
-                    std::string scoreStr = std::to_string(score);
-
                     timeSinceLastClear = 0.0f;
                     std::cout << score << std::endl;
                     
@@ -280,10 +294,12 @@ int main()
             window.clear(Color::White);
             window.draw(background);
 
+            //แปลงคะแนนเป็น string
             scoreDigits = (log10(score) + 1);
 
             std::string scoreStr = std::to_string(score);
 
+            //วาดคะแนน
             for (int i = 0; i < scoreDigits; i++) {
                 nums.setPosition(320, 80);
                 nums.setTextureRect(IntRect((int(scoreStr[scoreStr.length() - i - 1]) - 48) * 18, 0, 18, 18));
@@ -291,6 +307,7 @@ int main()
                 window.draw(nums);
             }
 
+            //วาดบล็อกตอนถึงพื้น
             for (int i = 0;i < M;i++) {
                 for (int j = 0;j < N;j++) {
                     if (field[i][j] == 0) {
@@ -304,7 +321,7 @@ int main()
             }
 
 
-            //วาดรูปบล็อกตามสีตอนถึงพื่น
+            //วาดรูปบล็อก
             for (int i = 0; i < 4; i++) {
                 s.setTextureRect(IntRect(colorNum * 18, 0, 18, 18));
                 s.setPosition(a[i].x * 18, a[i].y * 18);
@@ -312,6 +329,7 @@ int main()
                 window.draw(s);
             }
 
+            //วาด gameover และ finalscore
             if (gameOver) {
                 window.clear(Color::White);
                 window.draw(background);
@@ -320,6 +338,7 @@ int main()
                 window.draw(gameover);
                 scorefinal.setPosition(30, 150);
                 window.draw(scorefinal);
+                //แสดงคะแนน
                 for (int i = 0; i < scoreDigits; i++) {
                     nums.setPosition(125, 200);
                     nums.setTextureRect(IntRect((int(scoreStr[scoreStr.length() - i - 1]) - 48) * 18, 0, 18, 18));
